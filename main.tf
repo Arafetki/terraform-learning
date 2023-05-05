@@ -13,7 +13,7 @@ provider "aws" {
     3- Create Route table & Internet gateway
     4- Provision ec2 instance
     5- Deploy nginx docker container
-    6- Create SG ( open port 22 & port 80 )
+    6- Create SG ( open port 22 & port 8080 )
 
 
  */
@@ -43,6 +43,13 @@ variable "my_ip" {
 
 }
 
+variable "instance_type" {
+    type = string
+}
+
+variable "pub_key" {
+    type = string
+}
 
 
 # Create Vpc
@@ -154,5 +161,54 @@ resource "aws_security_group" "demo_remoteAccess_sg" {
 
     tags = {
       Name = "demo_remoteAccess_sg"
+    }
+}
+
+# Fetch amazon machine image
+
+data "aws_ami" "demo_latest_amazon_linux_image" {
+
+    most_recent = true
+    owners = ["amazon"]
+
+    filter {
+      name = "name"
+      values = ["amzn2-ami-kernel-*-x86_64-gp2"]
+    }
+
+}
+
+
+# Output the result of the query
+
+output "ec2_demo_myapp_pub_ip" {
+
+    value = aws_instance.demo_myapp.public_ip
+  
+}
+
+
+# Create SSH  keyPair
+
+resource "aws_key_pair" "ssh-key" {
+  key_name = "demo_key_pair"
+  public_key = var.pub_key
+}
+
+
+# Create EC2 instance
+
+resource "aws_instance" "demo_myapp" {
+    subnet_id = aws_subnet.demo_subnet1.id
+    ami = data.aws_ami.demo_latest_amazon_linux_image.id
+    instance_type = var.instance_type
+
+    vpc_security_group_ids = [aws_security_group.demo_remoteAccess_sg.id]
+    availability_zone = var.avail_zone
+
+    key_name = aws_key_pair.ssh-key.key_name
+
+    tags = {
+      Name = "demo_myapp"
     }
 }
