@@ -38,6 +38,11 @@ variable "avail_zone" {
     type = string
 }
 
+variable "my_ip" {
+  type = string
+
+}
+
 
 
 # Create Vpc
@@ -105,9 +110,49 @@ resource "aws_route_table" "demo_rt1" {
   
 }
 
+# Create subnet association for demo_rt1 to subnet1 
+
 resource "aws_route_table_association" "demo_association_rt1_subnet1" {
 
     subnet_id = aws_subnet.demo_subnet1.id
     route_table_id = aws_route_table.demo_rt1.id
   
+}
+
+# Create SG ( open port 22 & port 8080)
+
+resource "aws_security_group" "demo_remoteAccess_sg" {
+    name = "demo_remoteAccess_sg"
+    description = "Allow SSH connection from my ip & HTTP traffic from anywhere"
+    vpc_id = aws_vpc.demo_vpc.id
+
+    ingress {
+        description = "Allow SSH from my ip"
+        from_port = 22
+        to_port = 22
+        protocol = "tcp"
+        cidr_block = [var.my_ip]
+
+    }
+
+    ingress {
+        description = "Allow HTTP traffic from anywhere"
+        from_port = 8080
+        to_port = 8080
+        protocol = "tcp"
+        cidr_block = ["0.0.0.0/0"]
+
+    }
+
+    egress {
+        from_port = 0
+        to_port = 0
+        protocol = "-1"
+        cidr_blocks = ["0.0.0.0/0"]
+        prefix_list_ids = []
+    }
+
+    tags = {
+      Name = "demo_remoteAccess_sg"
+    }
 }
