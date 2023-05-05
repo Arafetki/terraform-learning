@@ -104,3 +104,10 @@ resource "aws_route_table" "demo_rt1" {
     }
   
 }
+
+resource "aws_route_table_association" "demo_association_rt1_subnet1" {
+
+    subnet_id = aws_subnet.demo_subnet1.id
+    route_table_id = aws_route_table.demo_rt1.id
+  
+}
