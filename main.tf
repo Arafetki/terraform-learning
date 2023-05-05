@@ -208,6 +208,17 @@ resource "aws_instance" "demo_myapp" {
 
     key_name = aws_key_pair.ssh-key.key_name
 
+    user_data = <<EOF
+
+                #!/bin/bash
+                sudo yum -y update && sudo yum install  -y docker
+                sudo systemctl start docker
+                sudo systemctl enable docker
+                sudo usermod -aG docker ec2-user
+                docker run -d -p 8080:80 nginx
+                
+                EOF
+
     tags = {
       Name = "demo_myapp"
     }
